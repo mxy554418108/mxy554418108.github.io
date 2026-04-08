@@ -590,6 +590,7 @@
       opacity: 0;
       visibility: hidden;
       transition: all 0.4s ease;
+      overflow: hidden;
     }
     .img-lightbox.active { opacity: 1; visibility: visible; }
     .img-lightbox img {
@@ -600,8 +601,44 @@
       transform: scale(0.9);
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       object-fit: contain;
+      cursor: zoom-in;
+      will-change: transform;
     }
     .img-lightbox.active img { transform: scale(1); }
+    .img-lightbox img.lb-zoomed { cursor: grab; transition: none; border-radius: 12px; }
+    .img-lightbox img.lb-dragging { cursor: grabbing; }
+    .lb-zoom-hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      color: rgba(255,255,255,0.5);
+      font-size: 0.72rem;
+      padding: 6px 14px;
+      border-radius: 20px;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+    .lb-zoom-bar {
+      position: absolute;
+      bottom: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.78rem;
+      padding: 5px 16px;
+      border-radius: 20px;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
     .lightbox-nav {
       position: absolute;
       top: 50%;
@@ -908,9 +945,11 @@
   <div class="img-lightbox" id="imgLightbox">
     <button class="close-btn" onclick="closeLightbox()">&#10005;</button>
     <button class="lightbox-nav lightbox-prev" onclick="lightboxPrev()">&#10094;</button>
-    <img src="" alt="全屏查看" draggable="false">
+    <img src="" alt="全屏查看" draggable="false" id="lbImg">
     <button class="lightbox-nav lightbox-next" onclick="lightboxNext()">&#10095;</button>
     <div class="lightbox-counter"></div>
+    <div class="lb-zoom-bar" id="lbZoomBar">100%</div>
+    <div class="lb-zoom-hint">滚轮缩放 · 拖拽移动 · 双击还原</div>
   </div>
 
   <div class="main">
@@ -1262,21 +1301,66 @@
       'https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/2e2a12c15145403722448619821/wKWTSfSHOL8A.jpg'
     ];
     let lbIndex = 0;
+
+    // 缩放拖拽状态
+    let lbScale = 1, lbTx = 0, lbTy = 0;
+    let lbDragging = false, lbDragStartX = 0, lbDragStartY = 0, lbDragOriginX = 0, lbDragOriginY = 0;
+    let lbPinchDist = 0;
+    let lbZoomTimer = null;
+
+    const LB_MIN = 1, LB_MAX = 8;
+
+    function lbApplyTransform(img) {
+      img.style.transform = `translate(${lbTx}px, ${lbTy}px) scale(${lbScale})`;
+    }
+    function lbReset() {
+      lbScale = 1; lbTx = 0; lbTy = 0;
+      const img = document.getElementById('lbImg');
+      img.classList.remove('lb-zoomed','lb-dragging');
+      img.style.transform = '';
+      document.getElementById('lbZoomBar').style.opacity = '0';
+    }
+    function lbShowZoomBar() {
+      const bar = document.getElementById('lbZoomBar');
+      bar.textContent = Math.round(lbScale * 100) + '%';
+      bar.style.opacity = '1';
+      clearTimeout(lbZoomTimer);
+      lbZoomTimer = setTimeout(() => { bar.style.opacity = '0'; }, 1500);
+    }
+    function lbZoomAt(cx, cy, newScale) {
+      const img = document.getElementById('lbImg');
+      const rect = img.getBoundingClientRect();
+      const imgCx = rect.left + rect.width / 2;
+      const imgCy = rect.top + rect.height / 2;
+      const dx = cx - imgCx, dy = cy - imgCy;
+      const ratio = newScale / lbScale;
+      lbTx = lbTx * ratio + dx * (1 - ratio);
+      lbTy = lbTy * ratio + dy * (1 - ratio);
+      lbScale = newScale;
+      img.classList.toggle('lb-zoomed', lbScale > 1);
+      lbApplyTransform(img);
+      lbShowZoomBar();
+    }
+
     function openLightbox(idx) {
       lbIndex = idx;
+      lbReset();
       updateLightbox();
       document.getElementById('imgLightbox').classList.add('active');
       document.body.style.overflow = 'hidden';
     }
     function closeLightbox() {
+      lbReset();
       document.getElementById('imgLightbox').classList.remove('active');
       document.body.style.overflow = '';
     }
     function lightboxPrev() {
+      lbReset();
       lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
       updateLightbox();
     }
     function lightboxNext() {
+      lbReset();
       lbIndex = (lbIndex + 1) % lbImages.length;
       updateLightbox();
     }
@@ -1285,9 +1369,74 @@
       lb.querySelector('img').src = lbImages[lbIndex];
       lb.querySelector('.lightbox-counter').textContent = (lbIndex+1) + ' / ' + lbImages.length;
     }
+
+    // 点击背景关闭（仅在非缩放状态）
     document.getElementById('imgLightbox').addEventListener('click', e => {
-      if(e.target === e.currentTarget) closeLightbox();
+      if(e.target === e.currentTarget && lbScale <= 1) closeLightbox();
     });
+
+    // 鼠标滚轮缩放
+    document.getElementById('imgLightbox').addEventListener('wheel', e => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.15 : 0.15;
+      const newScale = Math.min(LB_MAX, Math.max(LB_MIN, lbScale + delta * lbScale));
+      lbZoomAt(e.clientX, e.clientY, newScale);
+    }, { passive: false });
+
+    // 双击还原
+    document.getElementById('lbImg').addEventListener('dblclick', e => {
+      e.stopPropagation();
+      if(lbScale > 1) { lbReset(); } else { lbZoomAt(e.clientX, e.clientY, 2.5); }
+    });
+
+    // 鼠标拖拽
+    document.getElementById('lbImg').addEventListener('mousedown', e => {
+      if(lbScale <= 1) return;
+      e.preventDefault();
+      lbDragging = true;
+      lbDragStartX = e.clientX; lbDragStartY = e.clientY;
+      lbDragOriginX = lbTx; lbDragOriginY = lbTy;
+      const img = document.getElementById('lbImg');
+      img.classList.add('lb-dragging');
+    });
+    document.addEventListener('mousemove', e => {
+      if(!lbDragging) return;
+      lbTx = lbDragOriginX + (e.clientX - lbDragStartX);
+      lbTy = lbDragOriginY + (e.clientY - lbDragStartY);
+      lbApplyTransform(document.getElementById('lbImg'));
+    });
+    document.addEventListener('mouseup', () => {
+      if(!lbDragging) return;
+      lbDragging = false;
+      document.getElementById('lbImg').classList.remove('lb-dragging');
+    });
+
+    // 触摸：双指缩放 + 单指拖拽
+    document.getElementById('imgLightbox').addEventListener('touchstart', e => {
+      if(e.touches.length === 2) {
+        lbPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      } else if(e.touches.length === 1 && lbScale > 1) {
+        lbDragging = true;
+        lbDragStartX = e.touches[0].clientX; lbDragStartY = e.touches[0].clientY;
+        lbDragOriginX = lbTx; lbDragOriginY = lbTy;
+      }
+    }, { passive: true });
+    document.getElementById('imgLightbox').addEventListener('touchmove', e => {
+      if(e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const newScale = Math.min(LB_MAX, Math.max(LB_MIN, lbScale * dist / lbPinchDist));
+        lbZoomAt(cx, cy, newScale);
+        lbPinchDist = dist;
+      } else if(e.touches.length === 1 && lbDragging) {
+        lbTx = lbDragOriginX + (e.touches[0].clientX - lbDragStartX);
+        lbTy = lbDragOriginY + (e.touches[0].clientY - lbDragStartY);
+        lbApplyTransform(document.getElementById('lbImg'));
+      }
+    }, { passive: false });
+    document.getElementById('imgLightbox').addEventListener('touchend', () => { lbDragging = false; });
 
     /* Copy to Clipboard */
     function copyText(text, btn) {
