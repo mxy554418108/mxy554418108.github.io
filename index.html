@@ -399,10 +399,10 @@
       overflow: hidden;
       cursor: default;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      justify-content: flex-start;
+      gap: 16px;
       border: 1px solid var(--glass-border);
       transition: var(--transition);
     }
@@ -420,6 +420,7 @@
     }
     .skill-card:nth-child(1) { --skill-color: #818cf8; }
     .skill-card:nth-child(2) { --skill-color: #fbbf24; }
+    .skill-card:nth-child(2) .skill-icon-img { filter: brightness(2) contrast(1.1); }
     .skill-card:nth-child(3) { --skill-color: #c084fc; }
     .skill-card:nth-child(4) { --skill-color: #22d3ee; }
     .skill-card:nth-child(5) { --skill-color: #4ade80; }
@@ -434,24 +435,24 @@
       left: 10%;
       width: 80%;
     }
-    .skill-icon-box {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 17px;
+    .skill-icon-img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      display: block;
       flex-shrink: 0;
+      align-self: center;
     }
-    .skill-card:nth-child(1) .skill-icon-box { background: rgba(99,102,241,0.1); }
-    .skill-card:nth-child(2) .skill-icon-box { background: rgba(245,158,11,0.1); }
-    .skill-card:nth-child(3) .skill-icon-box { background: rgba(168,85,247,0.1); }
-    .skill-card:nth-child(4) .skill-icon-box { background: rgba(6,182,212,0.1); }
-    .skill-card:nth-child(5) .skill-icon-box { background: rgba(34,197,94,0.1); }
-    .skill-card:nth-child(6) .skill-icon-box { background: rgba(249,115,22,0.1); }
-    .skill-text-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .skill-name { font-size: 1.15rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; }
-    .skill-full-name { font-size: 0.7rem; color: var(--text-tertiary); line-height: 1.3; }
+    .skill-card {
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+    }
+    .skill-text-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; align-self: center; }
+    .skill-name { font-size: 1.15rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; margin: 0; }
+    .skill-full-name { font-size: 0.7rem; color: var(--text-tertiary); line-height: 1.3; margin: 0; }
 
     /* Portfolio */
     .portfolio-grid {
@@ -900,8 +901,9 @@
     }
     @media (max-width: 600px) {
       .skills-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .skill-card { padding: 14px 16px; justify-content: center; }
+      .skill-card { padding: 14px 16px; justify-content: flex-start; }
       .skill-icon-box { width: 30px; height: 30px; font-size: 14px; }
+      .skill-icon-img { width: 36px; height: 36px; }
       .skill-name { font-size: 0.85rem; }
       .hero { padding: 100px 0 60px; }
       .exp-card { padding: 20px; }
@@ -918,6 +920,15 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
     ::selection { background: rgba(99,102,241,0.3); color: var(--text-primary); }
   </style>
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?4d7c3fdb29ac3a6860e68ff80be735dd";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+  </script>
 </head>
 <body>
 
@@ -933,6 +944,7 @@
       <a class="nav-link" href="#skills">技能</a>
       <a class="nav-link" href="#portfolio">作品</a>
       <a class="nav-link" href="#experience">经历</a>
+      <a class="nav-link" href="#contact">联系</a>
     </div>
   </nav>
 
@@ -1000,21 +1012,27 @@
       <h2 class="section-heading">技能专长</h2>
       <div class="skills-grid">
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/c9e40ee05145403722606529608/bEM0uauARFEA.png" alt="C4D" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">C4D</div><div class="skill-full-name">Cinema 4D</div></div>
         </div>
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/72c84fc8vodsh1329181132/9c2b5f3b5145403723103361589/T4AaXnEPAY0A.png" alt="Octane" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">Octane</div><div class="skill-full-name">Octane Render</div></div>
         </div>
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/be4a33765145403722606035822/gdgdnXI0O1wA.png" alt="AE" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">AE</div><div class="skill-full-name">After Effects</div></div>
         </div>
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/83e60fa75145403722605823997/gG7OHUrko3IA.png" alt="PS" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">PS</div><div class="skill-full-name">Photoshop</div></div>
         </div>
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/149655c25145403722607430897/IamxyL3ALp4A.png" alt="PR" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">PR</div><div class="skill-full-name">Premiere Pro</div></div>
         </div>
         <div class="glass skill-card">
+          <img class="skill-icon-img" src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/c9f5971d5145403722606538533/bE4UZuogzyMA.png" alt="AI" draggable="false">
           <div class="skill-text-wrap"><div class="skill-name">AI</div><div class="skill-full-name">Illustrator</div></div>
         </div>
       </div>
@@ -1022,8 +1040,8 @@
 
     <!-- Portfolio -->
     <section class="section" id="portfolio">
-      <div class="section-label">Portfolio</div>
-      <h2 class="section-heading">作品展示</h2>
+      <div class="section-label">Video</div>
+      <h2 class="section-heading">视频作品</h2>
       <div class="portfolio-grid">
         <div class="glass portfolio-card" onclick="openModal('https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/974b57395145403722120907079/EiNOkuC1AfEA.mp4')">
           <div class="card-bg" style="background-image:url('https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/fb4346195145403722451467602/7Hkm1hcppI8A.jpg')"></div>
@@ -1078,8 +1096,8 @@
 
     <!-- Single Frame Gallery -->
     <section class="section" id="frames">
-      <div class="section-label">Gallery</div>
-      <h2 class="section-heading">画廊展示</h2>
+      <div class="section-label">Frame</div>
+      <h2 class="section-heading">单帧作品</h2>
       <div class="frames-grid">
         <div class="glass frame-card" onclick="openLightbox(0)"><div class="frame-img-wrap"><img src="https://1329181132.vod-qcloud.com/72c84fc8vodsh1329181132/355c87e85145403722448943747/83p0sQ6GWVIA.jpg" alt="画廊作品 1" draggable="false"></div></div>
         <div class="glass frame-card" onclick="openLightbox(1)"><div class="frame-img-wrap"><img src="https://1329181132.vod-qcloud.com/13d4d901vodcq1329181132/e60fc2845145403722447848038/U0A6x45eKxUA.jpg" alt="画廊作品 2" draggable="false"></div></div>
@@ -1248,10 +1266,15 @@
 
     /* Active Nav on Scroll */
     (function() {
-      const ids=['about','skills','portfolio','experience'], links=document.querySelectorAll('.nav-link');
+      const ids=['about','skills','portfolio','experience','contact'], links=document.querySelectorAll('.nav-link');
       addEventListener('scroll', () => {
         let cur='';
-        ids.forEach(id => { const el=document.getElementById(id); if(el && el.getBoundingClientRect().top<=200) cur=id; });
+        ids.forEach(id => {
+          const el=document.getElementById(id);
+          if(el && el.getBoundingClientRect().top<=200) cur=id;
+        });
+        // 如果滚动到底部，激活contact
+        if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) cur='contact';
         links.forEach(l => { l.classList.remove('active'); if(l.getAttribute('href')==='#'+cur) l.classList.add('active'); });
       });
     })();
